@@ -20,7 +20,9 @@ Resources:
               - "sts:AssumeRole"
       Path: "/"
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        #- arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
   IAMInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
@@ -46,18 +48,14 @@ Resources:
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow http and SSH access from our IP
+      GroupDescription: Allow http access
       VpcId:
         Fn::ImportValue:
           !Sub ${EnvironmentName}-VPCID
       SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: 8080
-        ToPort: 8080
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
+        FromPort: 80
+        ToPort: 80
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: tcp
@@ -68,7 +66,6 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: ami-013f17f36f8b1fefb
-      KeyName: Vocareumkey
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
@@ -146,7 +143,12 @@ Resources:
         Fn::ImportValue:
           Fn::Sub: "${EnvironmentName}-VPCID"
 
+Outputs:
+  LoadBalancer:
+    Description: The Url to the loadbalancer
+    Value:
+      Fn::Join: ["", ["http://", !GetAtt WebLB.DNSName]]
+    Export:
+      Name: !Sub ${EnvironmentName}-DNSName
+
     
-
-
-
